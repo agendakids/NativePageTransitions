@@ -20,6 +20,7 @@ import org.apache.cordova.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import android.util.Log;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -60,6 +61,7 @@ public class NativePageTransitions extends CordovaPlugin {
   // this plugin listens to page changes, so only kick in a transition when it was actually requested by the JS bridge
   private String lastCallbackID;
   private static boolean isCrosswalk;
+  private boolean isHardwareAccelerationTried = false;
 
   static {
     try {
@@ -113,6 +115,10 @@ public class NativePageTransitions extends CordovaPlugin {
   @Override
   public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
     _callbackContext = callbackContext;
+
+    if (!isHardwareAccelerationTried){
+      enableAcceleration();
+    }
 
     if (ACTION_EXECUTE_PENDING_TRANSITION.equalsIgnoreCase(action)) {
       delay = 0;
@@ -710,6 +716,19 @@ public class NativePageTransitions extends CordovaPlugin {
     }
   }
 
+  private void enableAcceleration(){
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          enableHardwareAcceleration();
+        } catch (Exception e) {
+          Log.e("TRANSISION","enableHardwareAcceleration Exception",e);
+        }
+      }
+    });
+  }
+
   private Bitmap getBitmap() {
     Bitmap bitmap = null;
     if (isCrosswalk) {
@@ -759,6 +778,7 @@ public class NativePageTransitions extends CordovaPlugin {
   }
 
   private void enableHardwareAcceleration() {
+    isHardwareAccelerationTried = true;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
       cordova.getActivity().getWindow().setFlags(
           WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
