@@ -721,6 +721,14 @@ public class NativePageTransitions extends CordovaPlugin {
     } else {
       View view = getView();
       view.setDrawingCacheEnabled(true);
+
+      // this is the important code :)
+      // Without it the view will have a dimension of 0,0 and the bitmap will be null
+      view.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+              View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+      view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
+
+      view.buildDrawingCache(true);
       bitmap = Bitmap.createBitmap(view.getDrawingCache());
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR1) {
         bitmap.setHasAlpha(false);
